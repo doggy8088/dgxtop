@@ -15,7 +15,16 @@ if [ "$(uname)" != "Linux" ]; then
     exit 1
 fi
 
-DEB_URL="https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-1_all.deb"
+# Get latest release version from GitHub API (with fallback)
+VERSION="1.1.0"
+if command -v curl >/dev/null 2>&1; then
+    LATEST_TAG=$(curl -s https://api.github.com/repos/doggy8088/dgxtop/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    if [ -n "$LATEST_TAG" ] && [[ "$LATEST_TAG" =~ ^v[0-9] ]]; then
+        VERSION=${LATEST_TAG#v}
+    fi
+fi
+
+DEB_URL="https://github.com/doggy8088/dgxtop/releases/download/v${VERSION}/dgxtop_${VERSION}-1_all.deb"
 TEMP_DEB="/tmp/dgxtop_latest_all.deb"
 
 # Clean up any existing temp file
