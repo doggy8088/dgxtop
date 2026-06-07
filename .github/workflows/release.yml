@@ -2,9 +2,8 @@ name: Build and Release
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    tags:
+      - '*'
 
 permissions:
   contents: write
@@ -30,16 +29,11 @@ jobs:
           # Copy the built .deb package from the parent directory
           cp ../dgxtop_*_all.deb dist/
 
-      - name: Generate Release Tag
-        run: |
-          # Generate tag using UTC date/time and run ID
-          echo "RELEASE_TAG=rel-$(date -u +'%Y%m%d-%H%M%S')-${{ github.run_id }}" >> $GITHUB_ENV
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_TAG }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           files: dist/*.deb
           draft: false
           prerelease: false
