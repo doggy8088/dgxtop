@@ -11,9 +11,12 @@ A performance monitoring CLI tool for Ubuntu inspired by asitop for Mac, with ad
 
 - **Volume Transfer Speed Monitoring**: Real-time read/write speed tracking per drive
 - **System Monitoring**: GB10 GPU, CPU, memory, and network statistics
-- **Real-time Display**: Interactive terminal interface with customizable update intervals
+- **Process Monitoring**: Live tracking of top resource-consuming processes, sorted by CPU, Memory, Read, or Write rates
+- **Alerting Thresholds**: Highly visual red/yellow system alerts when CPU, Memory, GPU, or Disk latency limits are exceeded
+- **Configurable Options**: Multi-level configuration file support (`~/.config/dgxtop/config.json`)
+- **Systemd Daemon Mode**: Install as a service to log background performance metrics automatically
+- **Real-time Display**: Interactive terminal interface with customizable update intervals and sorting
 - **Lightweight**: Minimal dependencies, uses native Linux `/proc` filesystem
-- **Per-Drive Performance**: Detailed breakdown of I/O performance for each storage device
 
 ## Installation
 
@@ -27,8 +30,8 @@ Alternatively, you can manually download and install the `.deb` package to `/tmp
 
 ```bash
 cd /tmp
-wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-1_all.deb
-sudo apt install ./dgxtop_1.0.0-1_all.deb
+wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.1.0-1_all.deb
+sudo apt install ./dgxtop_1.1.0-1_all.deb
 ```
 
 That's it. Dependencies are installed automatically.
@@ -44,9 +47,15 @@ dgxtop
 ### Options
 
 ```bash
-dgxtop --interval 0.5        # Update every 0.5 seconds
-dgxtop -i 2.0              # Update every 2 seconds
-dgxtop --version           # Show version information
+dgxtop --interval 0.5                  # Update every 0.5 seconds
+dgxtop -d                              # Run in daemon mode (logging stats without TUI)
+dgxtop --install-service               # Install systemd service system-wide
+dgxtop --install-user-service          # Install systemd service for current user
+dgxtop -n eth0                         # Monitor specific network interface
+dgxtop --log-level DEBUG               # Set logging level (DEBUG, INFO, etc.)
+dgxtop --log-dir /var/log/dgxtop       # Custom directory to save logs
+dgxtop --sort-processes memory         # Set process sorting method (cpu, memory, read, write)
+dgxtop --version                       # Show version information
 ```
 
 ### Interactive Controls
@@ -54,6 +63,10 @@ dgxtop --version           # Show version information
 - `q` - Quit the application
 - `+` - Speed up update interval
 - `-` - Slow down update interval
+- `c` - Sort processes by CPU usage
+- `m` - Sort processes by Memory usage
+- `r` - Sort processes by Read speed
+- `w` - Sort processes by Write speed
 
 ## Architecture
 
@@ -169,9 +182,12 @@ While inspired by the original asitop for Mac, this DGX Spark version:
 
 - **磁碟傳輸速度監控**：即時追蹤每個硬碟的讀取/寫入速度
 - **系統監控**：GB10 GPU、CPU、記憶體及網路統計數據
-- **即時顯示**：互動式終端介面，支援自訂更新頻率
+- **行程監控**：追蹤佔用資源最高的前幾個行程，可自訂依 CPU、記憶體、讀取或寫入速度排序
+- **警告閾值**：當 CPU、記憶體、GPU 使用率或磁碟等待時間超過自訂上限時，自動於畫面上顯示警告
+- **設定檔支援**：支援讀取自訂 JSON 設定檔 (`~/.config/dgxtop/config.json`)
+- **Systemd 服務與守護行程**：支援以背景守護行程 (Daemon) 執行，自動將系統數據寫入日誌檔
+- **即時顯示**：互動式終端介面，支援自訂更新頻率與排序欄位
 - **輕量級**：極簡相依性，使用 Linux 原生的 `/proc` 檔案系統
-- **單一硬碟效能**：詳細拆解每個儲存裝置的 I/O 效能
 
 ## 安裝
 
@@ -185,8 +201,8 @@ curl -sSL https://raw.githubusercontent.com/doggy8088/dgxtop/main/install.sh | b
 
 ```bash
 cd /tmp
-wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-1_all.deb
-sudo apt install ./dgxtop_1.0.0-1_all.deb
+wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.1.0-1_all.deb
+sudo apt install ./dgxtop_1.1.0-1_all.deb
 ```
 
 就這麼簡單。所有相依套件皆會自動安裝。
@@ -202,9 +218,15 @@ dgxtop
 ### 參數選項
 
 ```bash
-dgxtop --interval 0.5        # 每 0.5 秒更新一次
-dgxtop -i 2.0              # 每 2 秒更新一次
-dgxtop --version           # 顯示版本資訊
+dgxtop --interval 0.5                  # 每 0.5 秒更新一次
+dgxtop -d                              # 以守護行程模式執行 (背景監控與寫入日誌，無 TUI 介面)
+dgxtop --install-service               # 安裝全系統 systemd 服務
+dgxtop --install-user-service          # 安裝目前使用者層級的 systemd 服務
+dgxtop -n eth0                         # 監控指定的網路介面
+dgxtop --log-level DEBUG               # 設定日誌等級 (DEBUG, INFO 等)
+dgxtop --log-dir /var/log/dgxtop       # 設定自訂日誌目錄
+dgxtop --sort-processes memory         # 設定行程排序方式 (cpu, memory, read, write)
+dgxtop --version                       # 顯示版本資訊
 ```
 
 ### 互動式控制
@@ -212,6 +234,10 @@ dgxtop --version           # 顯示版本資訊
 - `q` - 結束應用程式
 - `+` - 加快更新頻率
 - `-` - 減慢更新頻率
+- `c` - 依 CPU 使用率排序行程
+- `m` - 依記憶體使用率排序行程
+- `r` - 依磁碟讀取速率排序行程
+- `w` - 依磁碟寫入速率排序行程
 
 ## 架構
 
