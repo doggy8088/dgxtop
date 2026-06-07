@@ -23,6 +23,7 @@ from gpu_monitor import GPUMonitor
 from system_monitor import SystemMonitor
 from disk_monitor import DiskMonitor
 from network_monitor import NetworkMonitor
+from process_monitor import ProcessMonitor
 from rich_ui import RichUI
 from logger import get_logger, log_system_info
 
@@ -30,15 +31,19 @@ from logger import get_logger, log_system_info
 class DGXTop:
     """Main DGXTOP application for DGX SPARK"""
 
-    def __init__(self):
-        self.config = AppConfig()
+    def __init__(self, config: AppConfig = None, daemon_mode: bool = False):
+        self.config = config if config is not None else AppConfig()
+        self.config.daemon_mode = daemon_mode
         self.console = Console()
         self.gpu_monitor = GPUMonitor()
         self.system_monitor = SystemMonitor()
         self.disk_monitor = DiskMonitor()
-        self.network_monitor = NetworkMonitor()
+        self.network_monitor = NetworkMonitor(self.config)
+        self.process_monitor = ProcessMonitor()
         self.ui = RichUI(self.config)
-        self.logger = get_logger()
+        
+        # Configure logging directory and level from AppConfig
+        self.logger = get_logger(self.config.log_dir, self.config.log_level)
         self.running = True
 
         # Setup signal handlers
@@ -68,6 +73,14 @@ class DGXTop:
         elif key == '-':
             # Slow down (increase interval), maximum 5 seconds
             self.config.update_interval = min(5.0, self.config.update_interval + 0.1)
+        elif key == 'c':
+            self.config.process_sort_by = "cpu"
+        elif key == 'm':
+            self.config.process_sort_by = "memory"
+        elif key == 'r':
+            self.config.process_sort_by = "read"
+        elif key == 'w':
+            self.config.process_sort_by = "write"
 
     def collect_stats(self) -> dict:
         """Collect all system statistics"""
@@ -89,13 +102,40 @@ class DGXTop:
         network_stats = self.network_monitor.get_interface_stats_for_display()
         stats["network_io"] = network_stats
 
-        # Network history for sparklines (future use)
+        # Network history for sparklines
         stats["network_history"] = self.network_monitor.get_history()
+
+        # Process stats
+        process_stats = self.process_monitor.get_top_processes(
+            limit=self.config.process_limit,
+            sort_by=self.config.process_sort_by
+        )
+        stats["processes"] = process_stats
 
         return stats
 
     def run(self):
-        """Main application loop using rich Live display"""
+        """Main application loop using rich Live display or daemon loop"""
+        if getattr(self.config, "daemon_mode", False):
+            self.logger.log_info("Starting daemon loop")
+            try:
+                while self.running:
+                    start = time.time()
+                    try:
+                        stats = self.collect_stats()
+                        self.logger.log_performance_stats(stats)
+                    except Exception as e:
+                        self.logger.log_error(e, "Daemon stats collection")
+
+                    elapsed = time.time() - start
+                    sleep_time = max(0, self.config.update_interval - elapsed)
+                    time.sleep(sleep_time)
+            except KeyboardInterrupt:
+                pass
+            finally:
+                self.logger.log_info("DGXTOP daemon shutdown")
+            return
+
         self.logger.log_info("Starting main loop")
 
         # Check if we have a TTY for keyboard input
@@ -130,6 +170,9 @@ class DGXTop:
                         # Collect stats
                         stats = self.collect_stats()
 
+                        # Log stats at debug level (or if logging enabled)
+                        self.logger.log_performance_stats(stats)
+
                         # Update the live display
                         live.update(self.ui.get_renderable(stats))
 
@@ -150,9 +193,94 @@ class DGXTop:
             self.logger.log_info("DGXTOP shutdown")
 
 
+def install_systemd_service(user_level: bool = False):
+    """Install systemd service file"""
+    import subprocess
+
+    executable = sys.executable
+    script_path = os.path.abspath(__file__)
+    
+    # ExecStart will point to the python3 script_path --daemon
+    exec_start = f"{executable} {script_path} --daemon"
+
+    service_content = f"""[Unit]
+Description=DGXTOP System Monitor Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={exec_start}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+""" if user_level else f"""[Unit]
+Description=DGXTOP System Monitor Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={exec_start}
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
+"""
+
+    if user_level:
+        service_dir = os.path.expanduser("~/.config/systemd/user")
+        os.makedirs(service_dir, exist_ok=True)
+        service_path = os.path.join(service_dir, "dgxtop.service")
+        
+        try:
+            with open(service_path, "w", encoding="utf-8") as f:
+                f.write(service_content)
+            print(f"User service file created at: {service_path}")
+            
+            # Reload daemon and enable
+            subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
+            subprocess.run(["systemctl", "--user", "enable", "dgxtop.service"], check=True)
+            subprocess.run(["systemctl", "--user", "start", "dgxtop.service"], check=True)
+            print("Successfully installed and started dgxtop user-level service!")
+        except Exception as e:
+            print(f"Error installing user-level service: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        service_path = "/etc/systemd/system/dgxtop.service"
+        print("Writing system-wide systemd service file...")
+        
+        try:
+            import tempfile
+            with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
+                tmp.write(service_content)
+                tmp_path = tmp.name
+            
+            # Move file using sudo
+            subprocess.run(["sudo", "mv", tmp_path, service_path], check=True)
+            subprocess.run(["sudo", "chown", "root:root", service_path], check=True)
+            subprocess.run(["sudo", "chmod", "644", service_path], check=True)
+            subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True)
+            subprocess.run(["sudo", "systemctl", "enable", "dgxtop.service"], check=True)
+            subprocess.run(["sudo", "systemctl", "start", "dgxtop.service"], check=True)
+            print("Successfully installed and started dgxtop system-level service!")
+        except Exception as e:
+            print(f"Error installing system-wide service: {e}", file=sys.stderr)
+            print("Please run this command with sudo / as root, or try --install-user-service")
+            sys.exit(1)
+
+
 def main():
     """Entry point"""
-    from dgxtop import __version__
+    try:
+        from dgxtop import __version__
+    except ImportError:
+        try:
+            from __init__ import __version__
+        except ImportError:
+            __version__ = "1.0.0"
 
     parser = argparse.ArgumentParser(
         prog="dgxtop",
@@ -161,9 +289,46 @@ def main():
     parser.add_argument(
         "-i", "--interval",
         type=float,
-        default=1.0,
+        default=None,
         metavar="SECONDS",
-        help="Update interval in seconds (default: 1.0)",
+        help="Update interval in seconds",
+    )
+    parser.add_argument(
+        "-d", "--daemon",
+        action="store_true",
+        help="Run in daemon mode (background monitoring & logging)",
+    )
+    parser.add_argument(
+        "--install-service",
+        action="store_true",
+        help="Install systemd service system-wide",
+    )
+    parser.add_argument(
+        "--install-user-service",
+        action="store_true",
+        help="Install systemd service for current user",
+    )
+    parser.add_argument(
+        "-n", "--interface",
+        type=str,
+        help="Monitor specific network interface",
+    )
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Set log level",
+    )
+    parser.add_argument(
+        "--log-dir",
+        type=str,
+        help="Directory to save logs",
+    )
+    parser.add_argument(
+        "--sort-processes",
+        type=str,
+        choices=["cpu", "memory", "read", "write"],
+        help="Process list sorting",
     )
     parser.add_argument(
         "-v", "--version",
@@ -173,11 +338,33 @@ def main():
 
     args = parser.parse_args()
 
+    # Handle service installations immediately
+    if args.install_service:
+        install_systemd_service(user_level=False)
+        sys.exit(0)
+    elif args.install_user_service:
+        install_systemd_service(user_level=True)
+        sys.exit(0)
+
     console = Console()
 
     try:
-        app = DGXTop()
-        app.config.update_interval = args.interval
+        config = AppConfig()
+        
+        # Override config settings from CLI arguments if provided
+        if args.interval is not None:
+            config.update_interval = args.interval
+        if args.interface is not None:
+            config.network_interfaces = [args.interface]
+            config.network_interface_history = args.interface
+        if args.log_level is not None:
+            config.log_level = args.log_level
+        if args.log_dir is not None:
+            config.log_dir = args.log_dir
+        if args.sort_processes is not None:
+            config.process_sort_by = args.sort_processes
+
+        app = DGXTop(config=config, daemon_mode=args.daemon)
         app.run()
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")

@@ -139,10 +139,17 @@ class RichUI:
         lines.append(spark_text)
 
         content = Group(*lines)
+
+        # Check threshold
+        is_alert = cpu.usage_percent > self.config.cpu_threshold
+        border_style = "bold red" if is_alert else self.theme["primary"]
+        title_style = "bold red" if is_alert else "bold"
+        alert_tag = " [ALERT]" if is_alert else ""
+
         return Panel(
             content,
-            title=f"[bold]CPU ({cpu.core_count}-core ARM)[/bold]",
-            border_style=self.theme["primary"],
+            title=f"[{title_style}]CPU ({cpu.core_count}-core ARM){alert_tag}[/{title_style}]",
+            border_style=border_style,
             padding=(0, 1),
         )
 
@@ -210,12 +217,19 @@ class RichUI:
         lines.append(spark_text)
 
         content = Group(*lines)
+
+        # Check threshold
+        is_alert = gpu.utilization_gpu > self.config.gpu_threshold
+        border_style = "bold red" if is_alert else self.theme["primary"]
+        title_style = "bold red" if is_alert else "bold"
+        alert_tag = " [ALERT]" if is_alert else ""
+
         return Panel(
             content,
-            title=f"[bold]GPU ({gpu.name})[/bold]"
+            title=f"[{title_style}]GPU ({gpu.name}){alert_tag}[/{title_style}]"
             if gpu.name
-            else "[bold]GPU (Blackwell)[/bold]",
-            border_style=self.theme["primary"],
+            else f"[{title_style}]GPU (Blackwell){alert_tag}[/{title_style}]",
+            border_style=border_style,
             padding=(0, 1),
         )
 
@@ -254,10 +268,17 @@ class RichUI:
         lines.append(spark_text)
 
         content = Group(*lines)
+
+        # Check threshold
+        is_alert = mem.usage_percent > self.config.mem_threshold
+        border_style = "bold red" if is_alert else self.theme["primary"]
+        title_style = "bold red" if is_alert else "bold"
+        alert_tag = " [ALERT]" if is_alert else ""
+
         return Panel(
             content,
-            title="[bold]Unified Memory[/bold]",
-            border_style=self.theme["primary"],
+            title=f"[{title_style}]Unified Memory{alert_tag}[/{title_style}]",
+            border_style=border_style,
             padding=(0, 1),
         )
 
@@ -331,12 +352,18 @@ class RichUI:
         table.add_column("W-IOPS", justify="right")
         table.add_column("Await(ms)", justify="right")
 
+        is_alert = False
         for device, stat in disk_stats.items():
             read_mb = stat.get("read_rate", 0) / (1024 * 1024)
             write_mb = stat.get("write_rate", 0) / (1024 * 1024)
             r_iops = stat.get("r_iops", 0)
             w_iops = stat.get("w_iops", 0)
             await_ms = stat.get("await_ms", 0)
+
+            device_alert = await_ms > self.config.disk_await_threshold
+            if device_alert:
+                is_alert = True
+            row_style = "bold red" if device_alert else ""
 
             table.add_row(
                 device,
@@ -345,15 +372,20 @@ class RichUI:
                 f"{r_iops:.0f}",
                 f"{w_iops:.0f}",
                 f"{await_ms:.2f}",
+                style=row_style
             )
 
         if not disk_stats:
             table.add_row("No devices", "-", "-", "-", "-", "-")
 
+        border_style = "bold red" if is_alert else self.theme["primary"]
+        title_style = "bold red" if is_alert else "bold"
+        alert_tag = " [ALERT]" if is_alert else ""
+
         return Panel(
             table,
-            title="[bold]Disk I/O Statistics[/bold]",
-            border_style=self.theme["primary"],
+            title=f"[{title_style}]Disk I/O Statistics{alert_tag}[/{title_style}]",
+            border_style=border_style,
             padding=(0, 1),
         )
 
@@ -402,6 +434,71 @@ class RichUI:
             padding=(0, 1),
         )
 
+    def _build_processes_table(self, stats: Dict[str, Any]) -> Panel:
+        """Build process monitoring table"""
+        processes = stats.get("processes", [])
+
+        table = Table(
+            show_header=True,
+            header_style=f"bold {self.theme['primary']}",
+            border_style=self.theme["primary"],
+            box=None,
+            padding=(0, 1),
+        )
+
+        table.add_column("PID", justify="right", style="dim")
+        table.add_column("User")
+        table.add_column("Command")
+        table.add_column("CPU %", justify="right")
+        table.add_column("Mem %", justify="right")
+        table.add_column("Memory (RSS)", justify="right")
+        table.add_column("Read Rate", justify="right")
+        table.add_column("Write Rate", justify="right")
+
+        for proc in processes:
+            # Format memory
+            rss = proc.get("memory_rss", 0)
+            if rss < 1024 * 1024:
+                rss_str = f"{rss / 1024:.1f} KB"
+            elif rss < 1024 * 1024 * 1024:
+                rss_str = f"{rss / (1024 * 1024):.1f} MB"
+            else:
+                rss_str = f"{rss / (1024 * 1024 * 1024):.1f} GB"
+
+            # Format read/write rates
+            def format_rate(rate: float) -> str:
+                if rate < 1024:
+                    return f"{rate:.0f} B"
+                elif rate < 1024 * 1024:
+                    return f"{rate / 1024:.1f} KB"
+                else:
+                    return f"{rate / (1024 * 1024):.1f} MB"
+
+            read_rate_str = f"{format_rate(proc.get('read_rate', 0.0))}/s"
+            write_rate_str = f"{format_rate(proc.get('write_rate', 0.0))}/s"
+
+            table.add_row(
+                str(proc["pid"]),
+                proc["username"][:10],
+                proc["name"][:25],
+                f"{proc['cpu_percent']:.1f}%",
+                f"{proc['memory_percent']:.1f}%",
+                rss_str,
+                read_rate_str,
+                write_rate_str
+            )
+
+        if not processes:
+            table.add_row("-", "-", "No active processes", "-", "-", "-", "-", "-")
+
+        sort_by = self.config.process_sort_by.upper()
+        return Panel(
+            table,
+            title=f"[bold]Top Processes (sorted by {sort_by})[/bold]",
+            border_style=self.theme["primary"],
+            padding=(0, 1),
+        )
+
     def build_layout(self, stats: Dict[str, Any]) -> Layout:
         """Build the complete UI layout"""
         layout = Layout()
@@ -411,7 +508,8 @@ class RichUI:
             Layout(name="header", size=1),
             Layout(name="top", size=8),
             Layout(name="middle", size=6),
-            Layout(name="io_tables", size=8),  # Renamed from disk_table
+            Layout(name="io_tables", size=8),
+            Layout(name="processes", size=10),
             Layout(name="footer", size=3),
         )
 
@@ -447,19 +545,12 @@ class RichUI:
         layout["disk_table"].update(self._build_disk_table(stats))
         layout["network_table"].update(self._build_network_table(stats))
 
-        # Footer with copyright
-        footer_text = Text()
-        footer_text.append("© 2026 Will 保哥 - DGX SPARK System Monitor", style="dim")
-        footer_panel = Panel(
-            footer_text,
-            border_style=self.theme["primary"],
-            padding=(0, 2),
-        )
-        layout["footer"].update(footer_panel)
+        # Processes row
+        layout["processes"].update(self._build_processes_table(stats))
 
-
-        # Footer with copyright
+        # Footer with copyright and controls
         footer_text = Text()
+        footer_text.append("Controls: +/- Interval | c/m/r/w Sort processes (CPU/Mem/Read/Write) | q Quit\n", style=f"bold {self.theme['primary']}")
         footer_text.append("© 2026 Will 保哥 - DGX SPARK System Monitor", style="dim")
         footer_panel = Panel(
             footer_text,

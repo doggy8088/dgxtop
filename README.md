@@ -149,12 +149,12 @@ While inspired by the original asitop for Mac, this DGX Spark version:
 
 ## Roadmap
 
-- [ ] Add process monitoring
-- [ ] Implement alerting thresholds
-- [ ] Add configuration file support
-- [ ] Create systemd service option
-- [ ] Add network interface specific monitoring
-- [ ] Implement logging functionality
+- [x] Add process monitoring
+- [x] Implement alerting thresholds
+- [x] Add configuration file support
+- [x] Create systemd service option
+- [x] Add network interface specific monitoring
+- [x] Implement logging functionality
 
 ---
 
@@ -307,9 +307,9 @@ APACHE 2.0 授權條款 - 詳見 LICENSE 檔案。
 
 ## 開發路線圖
 
-- [ ] 新增行程監控 (Process monitoring)
-- [ ] 實作警告閾值
-- [ ] 新增設定檔支援
-- [ ] 建立 systemd 服務選項
-- [ ] 新增特定網路介面的監控
-- [ ] 實作日誌記錄功能
+- [x] 新增行程監控 (Process monitoring)
+- [x] 實作警告閾值
+- [x] 實作設定檔支援 (Configuration file support)
+- [x] 建立 systemd 服務選項
+- [x] 新增特定網路介面的監控
+- [x] 實作日誌記錄功能

@@ -35,7 +35,8 @@ class NetworkMonitor:
     # Interfaces to exclude from display
     EXCLUDED_INTERFACES = ("lo", "virbr", "docker", "br-", "veth")
 
-    def __init__(self):
+    def __init__(self, config=None):
+        self.config = config
         self.netdev_path = "/proc/net/dev"
         self.previous_stats: Dict[str, NetworkStats] = {}
         self.last_update_time = time.time()
@@ -44,8 +45,12 @@ class NetworkMonitor:
         self.tx_history = deque(maxlen=60)
 
     def _is_displayable_interface(self, interface_name: str) -> bool:
-        """Check if interface should be displayed (exclude virtual interfaces)"""
-        # Exclude loopback and virtual interfaces
+        """Check if interface should be displayed"""
+        # If user explicitly configured interfaces, only display those
+        if self.config and self.config.network_interfaces:
+            return interface_name in self.config.network_interfaces
+
+        # Otherwise, exclude loopback and virtual interfaces
         for prefix in self.EXCLUDED_INTERFACES:
             if interface_name.startswith(prefix):
                 return False
@@ -155,17 +160,30 @@ class NetworkMonitor:
         self.last_update_time = current_time
 
         # Update history for sparklines (store in bytes/sec for UI flexibility)
-        # Only sum displayable interfaces to avoid double-counting
-        total_rx = sum(
-            s.rx_bytes_per_sec
-            for s in current_stats
-            if self._is_displayable_interface(s.interface_name)
-        )
-        total_tx = sum(
-            s.tx_bytes_per_sec
-            for s in current_stats
-            if self._is_displayable_interface(s.interface_name)
-        )
+        target_iface = self.config.network_interface_history if self.config else ""
+        if target_iface:
+            # Find target interface
+            rx_val = 0.0
+            tx_val = 0.0
+            for s in current_stats:
+                if s.interface_name == target_iface:
+                    rx_val = s.rx_bytes_per_sec
+                    tx_val = s.tx_bytes_per_sec
+                    break
+            total_rx = rx_val
+            total_tx = tx_val
+        else:
+            # Only sum displayable interfaces to avoid double-counting
+            total_rx = sum(
+                s.rx_bytes_per_sec
+                for s in current_stats
+                if self._is_displayable_interface(s.interface_name)
+            )
+            total_tx = sum(
+                s.tx_bytes_per_sec
+                for s in current_stats
+                if self._is_displayable_interface(s.interface_name)
+            )
         self.rx_history.append(total_rx)
         self.tx_history.append(total_tx)
 

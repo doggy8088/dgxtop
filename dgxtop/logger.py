@@ -108,8 +108,8 @@ class DGXTopLogger:
             disk_stats = stats["disk"]
             for device, stat in disk_stats.items():
                 self.logger.debug(
-                    f"Disk {device}: RX={stat.read_bytes_per_sec:.2f} B/s, "
-                    f"TX={stat.write_bytes_per_sec:.2f} B/s"
+                    f"Disk {device}: RX={stat.get('read_rate', 0.0):.2f} B/s, "
+                    f"TX={stat.get('write_rate', 0.0):.2f} B/s"
                 )
 
         self.logger.debug("==============================")
