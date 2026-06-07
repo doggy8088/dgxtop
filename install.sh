@@ -15,7 +15,7 @@ if [ "$(uname)" != "Linux" ]; then
     exit 1
 fi
 
-DEB_URL="https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-2_all.deb"
+DEB_URL="https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-1_all.deb"
 TEMP_DEB="/tmp/dgxtop_latest_all.deb"
 
 # Clean up any existing temp file
