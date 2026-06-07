@@ -17,7 +17,7 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/gigcoder-ai/dgxtop",
+    url="https://github.com/doggy8088/dgxtop",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",

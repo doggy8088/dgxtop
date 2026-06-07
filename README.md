@@ -18,7 +18,7 @@ A performance monitoring CLI tool for Ubuntu inspired by asitop for Mac, with ad
 Download the `.deb` package and install:
 
 ```bash
-wget  https://github.com/GigCoder-ai/dgxtop/blob/main/deb_build/dgxtop_1.0.0-1_all.deb
+wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-1_all.deb
 sudo apt install ./dgxtop_1.0.0-1_all.deb
 ```
 
@@ -92,7 +92,7 @@ Where:
 ### On Ubuntu
 
 ```bash
-git clone https://github.com/gigcoder-ai/dgxtop.git
+git clone https://github.com/doggy8088/dgxtop.git
 cd dgxtop
 
 sudo apt install debhelper dh-python python3-all python3-setuptools dpkg-dev
@@ -104,7 +104,7 @@ sudo apt install ../dgxtop_1.0.0-1_all.deb
 ### On macOS (using Docker)
 
 ```bash
-git clone https://github.com/gigcoder-ai/dgxtop.git
+git clone https://github.com/doggy8088/dgxtop.git
 cd dgxtop
 
 docker run --rm -v "$(pwd)":/workspace ubuntu:24.04 bash -c "
