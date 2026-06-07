@@ -449,7 +449,7 @@ class RichUI:
 
         # Footer with copyright
         footer_text = Text()
-        footer_text.append("© 2026 GigCoder.ai - DGX SPARK System Monitor", style="dim")
+        footer_text.append("© 2026 Will 保哥 - DGX SPARK System Monitor", style="dim")
         footer_panel = Panel(
             footer_text,
             border_style=self.theme["primary"],
@@ -460,7 +460,7 @@ class RichUI:
 
         # Footer with copyright
         footer_text = Text()
-        footer_text.append("© 2026 GigCoder.ai - DGX SPARK System Monitor", style="dim")
+        footer_text.append("© 2026 Will 保哥 - DGX SPARK System Monitor", style="dim")
         footer_panel = Panel(
             footer_text,
             border_style=self.theme["primary"],

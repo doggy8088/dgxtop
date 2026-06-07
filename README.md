@@ -25,8 +25,8 @@ Alternatively, you can manually download and install the `.deb` package to `/tmp
 
 ```bash
 cd /tmp
-wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-1_all.deb
-sudo apt install ./dgxtop_1.0.0-1_all.deb
+wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-2_all.deb
+sudo apt install ./dgxtop_1.0.0-2_all.deb
 ```
 
 That's it. Dependencies are installed automatically.
@@ -105,7 +105,7 @@ cd dgxtop
 sudo apt install debhelper dh-python python3-all python3-setuptools dpkg-dev
 dpkg-buildpackage -us -uc -b
 
-sudo apt install ../dgxtop_1.0.0-1_all.deb
+sudo apt install ../dgxtop_1.0.0-2_all.deb
 ```
 
 ### On macOS (using Docker)
@@ -122,7 +122,7 @@ docker run --rm -v "$(pwd)":/workspace ubuntu:24.04 bash -c "
   mkdir -p /workspace/deb_build && cp /tmp/build_area/*.deb /workspace/deb_build/
 "
 
-# Output: deb_build/dgxtop_1.0.0-1_all.deb
+# Output: deb_build/dgxtop_1.0.0-2_all.deb
 ```
 
 ## License
