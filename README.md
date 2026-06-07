@@ -15,9 +15,10 @@ A performance monitoring CLI tool for Ubuntu inspired by asitop for Mac, with ad
 
 ## Installation
 
-Download the `.deb` package and install:
+Download the `.deb` package to `/tmp` (to avoid sandbox permission warnings) and install:
 
 ```bash
+cd /tmp
 wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.0.0-1_all.deb
 sudo apt install ./dgxtop_1.0.0-1_all.deb
 ```
