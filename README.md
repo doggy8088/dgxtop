@@ -15,7 +15,13 @@ A performance monitoring CLI tool for Ubuntu inspired by asitop for Mac, with ad
 
 ## Installation
 
-Download the `.deb` package to `/tmp` (to avoid sandbox permission warnings) and install:
+Install using the one-line installer script:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/doggy8088/dgxtop/main/install.sh | bash
+```
+
+Alternatively, you can manually download and install the `.deb` package to `/tmp` (to avoid sandbox permission warnings):
 
 ```bash
 cd /tmp
