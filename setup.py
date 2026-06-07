@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="dgxtop",
-    version="1.0.0",
+    version="1.1.0",
     author="DGXTOP Ubuntu Team",
     author_email="team@dgxtop.com",
     description=(

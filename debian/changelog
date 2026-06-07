@@ -1,3 +1,14 @@
+dgxtop (1.1.0-1) unstable; urgency=medium
+
+  * Add process monitoring sorted by CPU, memory, read IO, or write IO
+  * Implement configurable alerting thresholds for CPU, Memory, GPU, and Disk await times
+  * Add configuration file support (~/.config/dgxtop/config.json)
+  * Create systemd system & user level service options with autostart daemon
+  * Add network interface specific filtering and history monitoring
+  * Enable performance statistics logging to local log files with auto-rotation
+
+ -- Will 保哥 <noreply@example.com>  Mon, 08 Jun 2026 05:50:00 +0800
+
 dgxtop (1.0.0-1) unstable; urgency=medium
 
   * Initial release
