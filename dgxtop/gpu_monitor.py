@@ -35,11 +35,11 @@ class GPUMonitor:
         self._available = self._check_nvidia_smi()
 
     def _check_nvidia_smi(self) -> bool:
-        """Check if nvidia-smi is available"""
-        try:
-            result = subprocess.run(
-                ["nvidia-smi", "--version"], capture_output=True, timeout=5
-            )
+    """Check if nvidia-smi is available (use -L for broad driver compat)"""
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "-L"], capture_output=True, timeout=5
+        )
             return result.returncode == 0
         except (subprocess.SubprocessError, FileNotFoundError):
             return False
