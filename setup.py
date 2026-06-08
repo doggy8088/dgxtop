@@ -11,7 +11,7 @@ setup(
     name="dgxtop",
     version="1.1.0",
     author="DGXTOP Ubuntu Team",
-    author_email="team@dgxtop.com",
+    author_email="doggy.huang@gmail.com",
     description=(
         "Performance monitoring CLI tool for DGX systems with volume transfer speed tracking"
     ),

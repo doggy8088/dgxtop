@@ -7,7 +7,7 @@ dgxtop (1.1.0-1) unstable; urgency=medium
   * Add network interface specific filtering and history monitoring
   * Enable performance statistics logging to local log files with auto-rotation
 
- -- Will 保哥 <noreply@example.com>  Mon, 08 Jun 2026 05:50:00 +0800
+ -- Will 保哥 <doggy.huang@gmail.com>  Mon, 08 Jun 2026 05:50:00 +0800
 
 dgxtop (1.0.0-1) unstable; urgency=medium
 
@@ -17,4 +17,4 @@ dgxtop (1.0.0-1) unstable; urgency=medium
   * NVIDIA GPU support via nvidia-smi
   * Change footer to Will 保哥
 
- -- Will 保哥 <noreply@example.com>  Mon, 08 Jun 2026 05:40:00 +0800
+ -- Will 保哥 <doggy.huang@gmail.com>  Mon, 08 Jun 2026 05:40:00 +0800

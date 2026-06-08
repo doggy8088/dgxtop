@@ -1,7 +1,7 @@
 Source: dgxtop
 Section: admin
 Priority: optional
-Maintainer: DGXTOP Ubuntu Team <noreply@example.com>
+Maintainer: Will 保哥 <doggy.huang@gmail.com>
 Build-Depends: debhelper-compat (= 13),
                dh-python,
                python3-all,
