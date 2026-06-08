@@ -4,8 +4,7 @@
 
 A performance monitoring CLI tool for Ubuntu inspired by asitop for Mac, with added volume transfer speed monitoring capabilities.
 
-<img width="1623" height="928" alt="image" src="https://github.com/user-attachments/assets/04be8850-617c-4af0-8f1d-4a369cb8e7c2" />
-
+<img width="1312" height="754" alt="DGXTOP Screenshot" src="https://github.com/user-attachments/assets/8a222389-324e-409d-9c18-eaa73e6f1a2c" />
 
 ## Features
 
@@ -175,8 +174,7 @@ While inspired by the original asitop for Mac, this DGX Spark version:
 
 專為 Ubuntu 設計的效能監控 CLI 工具，靈感來自 Mac 的 asitop，並新增了硬碟磁碟傳輸速度監控功能。
 
-<img width="1623" height="928" alt="image" src="https://github.com/user-attachments/assets/04be8850-617c-4af0-8f1d-4a369cb8e7c2" />
-
+<img width="1312" height="754" alt="DGXTOP Screenshot" src="https://github.com/user-attachments/assets/8a222389-324e-409d-9c18-eaa73e6f1a2c" />
 
 ## 功能特點
 
