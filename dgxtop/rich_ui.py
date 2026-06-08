@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.style import Style
 from rich.table import Table
 from rich.text import Text
+from rich.cells import cell_len
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from config import AppConfig
@@ -46,6 +47,7 @@ class RichUI:
         self.config = config
         self.console = Console()
         self.theme = self.THEMES.get(config.color_theme, self.THEMES["green"])
+        self.show_help = False
 
         # History for sparklines (keep last 40 values for width)
         self.cpu_history: deque = deque(maxlen=40)
@@ -509,7 +511,7 @@ class RichUI:
             Layout(name="top", size=8),
             Layout(name="middle", size=6),
             Layout(name="io_tables", size=8),
-            Layout(name="processes", size=10),
+            Layout(name="processes"),
             Layout(name="footer", size=3),
         )
 
@@ -548,10 +550,26 @@ class RichUI:
         # Processes row
         layout["processes"].update(self._build_processes_table(stats))
 
-        # Footer with copyright and controls
+        # Footer with copyright and controls toggle
         footer_text = Text()
-        footer_text.append("Controls: +/- Interval | c/m/r/w Sort processes (CPU/Mem/Read/Write) | q Quit\n", style=f"bold {self.theme['primary']}")
-        footer_text.append("© 2026 Will 保哥 - DGX SPARK System Monitor", style="dim")
+        if self.show_help:
+            # Show detailed help controls
+            footer_text.append("Controls: +/- Interval | c/m/r/w Sort (CPU/Mem/Read/Write) | h Back | q Quit", style=f"bold {self.theme['primary']}")
+        else:
+            # Show copyright (dim) and "h Help" aligned to the right
+            left_text = "© 2026 Will 保哥 - DGX SPARK System Monitor"
+            right_text = "h Help"
+            console_width = self.console.width
+            available_width = max(40, console_width - 6)  # border & padding(0,2)
+            l_len = cell_len(left_text)
+            r_len = cell_len(right_text)
+            spaces = available_width - l_len - r_len
+            if spaces < 1:
+                spaces = 1
+            footer_text.append(left_text, style="dim")
+            footer_text.append(" " * spaces)
+            footer_text.append(right_text, style="dim")
+
         footer_panel = Panel(
             footer_text,
             border_style=self.theme["primary"],

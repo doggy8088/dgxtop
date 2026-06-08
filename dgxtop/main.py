@@ -81,6 +81,8 @@ class DGXTop:
             self.config.process_sort_by = "read"
         elif key == 'w':
             self.config.process_sort_by = "write"
+        elif key == 'h':
+            self.ui.show_help = not self.ui.show_help
 
     def collect_stats(self) -> dict:
         """Collect all system statistics"""
@@ -179,10 +181,24 @@ class DGXTop:
                     except Exception as e:
                         self.logger.log_error(e, "Stats collection")
 
-                    # Maintain update interval
+                    # Maintain update interval, but check keyboard frequently for instant response
                     elapsed = time.time() - start
                     sleep_time = max(0, self.config.update_interval - elapsed)
-                    time.sleep(sleep_time)
+                    
+                    step = 0.05
+                    slept = 0.0
+                    while slept < sleep_time and self.running:
+                        if has_tty:
+                            key = self._check_keyboard()
+                            if key:
+                                self._handle_key(key)
+                                # Update UI instantly on key press using cached stats
+                                live.update(self.ui.get_renderable(stats))
+                                # Recalculate remaining sleep time
+                                elapsed = time.time() - start
+                                sleep_time = max(0, self.config.update_interval - elapsed)
+                        time.sleep(min(step, max(0.0, sleep_time - slept)))
+                        slept += step
 
         except KeyboardInterrupt:
             pass
