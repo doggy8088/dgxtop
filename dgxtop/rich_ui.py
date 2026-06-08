@@ -167,7 +167,7 @@ class RichUI:
         if not gpu:
             return Panel(
                 Text("nvidia-smi not available", style="dim"),
-                title="GPU (Blackwell)",
+                title="GPU (Unknown)",
                 border_style=self.theme["primary"],
                 padding=(0, 1),
             )
@@ -236,7 +236,7 @@ class RichUI:
             content,
             title=f"[{title_style}]GPU ({gpu.name}){alert_tag}[/{title_style}]"
             if gpu.name
-            else f"[{title_style}]GPU (Blackwell){alert_tag}[/{title_style}]",
+            else f"[{title_style}]GPU (Unknown){alert_tag}[/{title_style}]",
             border_style=border_style,
             padding=(0, 1),
         )
