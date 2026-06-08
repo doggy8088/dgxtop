@@ -6,7 +6,7 @@ Handles CPU, memory, and network statistics
 import time
 import os
 from typing import Dict, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -33,7 +33,7 @@ class CPUStats:
     frequency_mhz: float = 0.0
     frequency_max_mhz: float = 0.0
     temperature_celsius: float = 0.0
-    core_count: int = 20
+    core_count: int = field(default_factory=lambda: os.cpu_count() or 1)
 
 
 @dataclass
@@ -131,7 +131,7 @@ class SystemMonitor:
             frequency_mhz=current_freq,
             frequency_max_mhz=max_freq,
             temperature_celsius=temperature,
-            core_count=20,
+            core_count=os.cpu_count() or 1,
         )
 
     def _parse_memory_stats(self) -> MemoryStats:
@@ -243,7 +243,7 @@ class SystemMonitor:
             freq_sum = 0
             cpu_count = 0
 
-            for cpu_id in range(20):
+            for cpu_id in range(os.cpu_count() or 1):
                 freq_path = (
                     f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/scaling_cur_freq"
                 )
