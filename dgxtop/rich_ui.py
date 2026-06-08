@@ -2,6 +2,7 @@
 """Rich-based UI manager for DGXTOP Ubuntu - works reliably over SSH"""
 
 import os
+import platform
 import sys
 from collections import deque
 from typing import Any, Dict, Optional
@@ -127,12 +128,17 @@ class RichUI:
 
         # Frequency (current / max)
         freq_text = Text()
-        freq_text.append(
-            f"Freq:  {cpu.frequency_mhz:5.0f} / 4800 MHz",
-            style=self.theme["primary"],
-        )
+        if cpu.frequency_max_mhz > 0:
+            freq_text.append(
+                f"Freq:  {cpu.frequency_mhz:5.0f} / {cpu.frequency_max_mhz:.0f} MHz",
+                style=self.theme["primary"],
+            )
+        else:
+            freq_text.append(
+                f"Freq:  {cpu.frequency_mhz:5.0f} MHz",
+                style=self.theme["primary"],
+            )
         lines.append(freq_text)
-
         # Sparkline history
         spark = self._make_sparkline(self.cpu_history, 100)
         spark_text = Text()
@@ -150,7 +156,7 @@ class RichUI:
 
         return Panel(
             content,
-            title=f"[{title_style}]CPU ({cpu.core_count}-core ARM){alert_tag}[/{title_style}]",
+            title=f"[{title_style}]CPU ({cpu.core_count}-core {platform.machine()}){alert_tag}[/{title_style}]",
             border_style=border_style,
             padding=(0, 1),
         )
@@ -279,7 +285,7 @@ class RichUI:
 
         return Panel(
             content,
-            title=f"[{title_style}]Unified Memory{alert_tag}[/{title_style}]",
+            title=f"[{title_style}]Memory{alert_tag}[/{title_style}]",
             border_style=border_style,
             padding=(0, 1),
         )
