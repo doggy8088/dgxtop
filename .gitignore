@@ -165,4 +165,5 @@ installer/
 MEMORY_INSTRUCTIONS.md
 SESSION_SUMMARY.md
 CONSTITUTION.md
-AGENTS.md
+
+.pybuild/

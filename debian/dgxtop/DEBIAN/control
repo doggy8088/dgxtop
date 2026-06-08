@@ -1,0 +1,13 @@
+Package: dgxtop
+Version: 1.1.0-1
+Architecture: all
+Maintainer: DGXTOP Ubuntu Team <doggy.huang@gmail.com>
+Installed-Size: 139
+Depends: python3-psutil, python3-rich, python3:any
+Section: admin
+Priority: optional
+Description: System monitor for NVIDIA DGX Spark
+ A performance monitoring CLI tool for Ubuntu on NVIDIA DGX Spark,
+ inspired by asitop for Mac. Provides real-time monitoring of CPU,
+ GPU, memory, disk I/O, and network statistics with an interactive
+ terminal interface.
