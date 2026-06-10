@@ -68,11 +68,11 @@ class DGXTop:
         if key == 'q':
             self.running = False
         elif key == '+' or key == '=':
-            # Speed up (decrease interval), minimum 0.1 seconds
-            self.config.update_interval = max(0.1, self.config.update_interval - 0.1)
+            # Speed up (decrease interval), minimum 1.0 seconds
+            self.config.update_interval = max(1.0, self.config.update_interval - 1.0)
         elif key == '-':
-            # Slow down (increase interval), maximum 5 seconds
-            self.config.update_interval = min(5.0, self.config.update_interval + 0.1)
+            # Slow down (increase interval), no upper limit
+            self.config.update_interval = self.config.update_interval + 1.0
         elif key == 'c':
             self.config.process_sort_by = "cpu"
         elif key == 'm':
