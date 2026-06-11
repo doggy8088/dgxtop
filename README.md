@@ -29,8 +29,8 @@ Alternatively, you can manually download and install the `.deb` package to `/tmp
 
 ```bash
 cd /tmp
-wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.1.0-1_all.deb
-sudo apt install ./dgxtop_1.1.0-1_all.deb
+wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.2.0-1_all.deb
+sudo apt install ./dgxtop_1.2.0-1_all.deb
 ```
 
 That's it. Dependencies are installed automatically.
@@ -119,7 +119,7 @@ cd dgxtop
 sudo apt install debhelper dh-python python3-all python3-setuptools dpkg-dev
 dpkg-buildpackage -us -uc -b
 
-sudo apt install ../dgxtop_1.0.0-1_all.deb
+sudo apt install ../dgxtop_1.2.0-1_all.deb
 ```
 
 ### On macOS (using Docker)
@@ -136,7 +136,7 @@ docker run --rm -v "$(pwd)":/workspace ubuntu:24.04 bash -c "
   mkdir -p /workspace/deb_build && cp /tmp/build_area/*.deb /workspace/deb_build/
 "
 
-# Output: deb_build/dgxtop_1.0.0-1_all.deb
+# Output: deb_build/dgxtop_1.2.0-1_all.deb
 ```
 
 ## License
@@ -199,8 +199,8 @@ curl -sSL https://raw.githubusercontent.com/doggy8088/dgxtop/main/install.sh | b
 
 ```bash
 cd /tmp
-wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.1.0-1_all.deb
-sudo apt install ./dgxtop_1.1.0-1_all.deb
+wget https://github.com/doggy8088/dgxtop/releases/latest/download/dgxtop_1.2.0-1_all.deb
+sudo apt install ./dgxtop_1.2.0-1_all.deb
 ```
 
 就這麼簡單。所有相依套件皆會自動安裝。
@@ -289,7 +289,7 @@ cd dgxtop
 sudo apt install debhelper dh-python python3-all python3-setuptools dpkg-dev
 dpkg-buildpackage -us -uc -b
 
-sudo apt install ../dgxtop_1.0.0-1_all.deb
+sudo apt install ../dgxtop_1.2.0-1_all.deb
 ```
 
 ### 在 macOS 上 (使用 Docker)
@@ -306,7 +306,7 @@ docker run --rm -v "$(pwd)":/workspace ubuntu:24.04 bash -c "
   mkdir -p /workspace/deb_build && cp /tmp/build_area/*.deb /workspace/deb_build/
 "
 
-# 輸出結果: deb_build/dgxtop_1.0.0-1_all.deb
+# 輸出結果: deb_build/dgxtop_1.2.0-1_all.deb
 ```
 
 ## 授權條款
