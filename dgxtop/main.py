@@ -65,7 +65,7 @@ class DGXTop:
 
     def _handle_key(self, key: str):
         """Handle keyboard input"""
-        if key == 'q':
+        if key == 'q' or key == '\x04':
             self.running = False
         elif key == '+' or key == '=':
             # Speed up (decrease interval), minimum 1.0 seconds
