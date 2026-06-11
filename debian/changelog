@@ -1,3 +1,11 @@
+dgxtop (1.2.0-1) unstable; urgency=medium
+
+  * Add Ctrl+D shortcut support to exit the application
+  * Adjust real-time update interval control to seconds
+  * Update images in README
+
+ -- Will 保哥 <doggy.huang@gmail.com>  Fri, 12 Jun 2026 00:55:21 +0800
+
 dgxtop (1.1.0-1) unstable; urgency=medium
 
   * Add process monitoring sorted by CPU, memory, read IO, or write IO

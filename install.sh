@@ -16,7 +16,7 @@ if [ "$(uname)" != "Linux" ]; then
 fi
 
 # Get latest release version from GitHub API (with fallback)
-VERSION="1.1.0"
+VERSION="1.2.0"
 if command -v curl >/dev/null 2>&1; then
     LATEST_TAG=$(curl -s https://api.github.com/repos/doggy8088/dgxtop/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
     if [ -n "$LATEST_TAG" ] && [[ "$LATEST_TAG" =~ ^v[0-9] ]]; then
