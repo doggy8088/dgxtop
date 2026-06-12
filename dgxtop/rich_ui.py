@@ -156,62 +156,91 @@ class RichUI:
         )
 
     def _build_gpu_panel(self, stats: Dict[str, Any]) -> Panel:
-        """Build GPU panel with usage, temp, power"""
-        gpu = stats.get("gpu")
-        if not gpu:
+        """Build GPU panel with usage, temp, power (supports multi-GPU)"""
+        gpus = stats.get("gpu") or []
+        # Backward compat: wrap single GPUStats in list
+        if not isinstance(gpus, list):
+            gpus = [gpus]
+
+        if not gpus:
             return Panel(
                 Text("nvidia-smi not available", style="dim"),
-                title="GPU (Blackwell)",
+                title="GPU (Unknown)",
                 border_style=self.theme["primary"],
                 padding=(0, 1),
             )
 
-        # Add to history
-        self.gpu_history.append(gpu.utilization_gpu)
+        # Title: single → name; multi same name → "N × name"; multi mixed → "N GPUs"
+        names = {g.name for g in gpus if g.name}
+        if len(gpus) == 1:
+            title_label = gpus[0].name or "Unknown"
+        elif len(names) == 1:
+            title_label = f"{len(gpus)} × {next(iter(names))}"
+        else:
+            title_label = f"{len(gpus)} GPUs"
+
+        # Aggregate utilization for sparkline (max across GPUs)
+        max_util = max((g.utilization_gpu for g in gpus), default=0.0)
+        self.gpu_history.append(max_util)
 
         lines = []
 
-        # GPU usage bar
-        bar = self._make_bar(gpu.utilization_gpu, 25)
-        usage_text = Text()
-        usage_text.append(
-            f"Usage: {gpu.utilization_gpu:5.1f}% ", style=self.theme["primary"]
-        )
-        usage_text.append("[")
-        usage_text.append(bar)
-        usage_text.append("]")
-        lines.append(usage_text)
+        if len(gpus) == 1:
+            # Single GPU: keep original detailed layout (5 lines)
+            gpu = gpus[0]
+            bar = self._make_bar(gpu.utilization_gpu, 25)
+            usage_text = Text()
+            usage_text.append(
+                f"Usage: {gpu.utilization_gpu:5.1f}% ", style=self.theme["primary"]
+            )
+            usage_text.append("[")
+            usage_text.append(bar)
+            usage_text.append("]")
+            lines.append(usage_text)
 
-        # Temperature
-        temp_text = Text()
-        temp_text.append(
-            f"Temp:  {gpu.temperature:5.1f}°C", style=self.theme["primary"]
-        )
-        lines.append(temp_text)
+            temp_text = Text()
+            temp_text.append(
+                f"Temp:  {gpu.temperature:5.1f}°C", style=self.theme["primary"]
+            )
+            lines.append(temp_text)
 
-        # Frequency
-        freq_text = Text()
-        if gpu.clock_max > 0:
-            freq_text.append(
-                f"Freq:  {gpu.clock_graphics:5.0f} / {gpu.clock_max:.0f} MHz",
+            freq_text = Text()
+            if gpu.clock_max > 0:
+                freq_text.append(
+                    f"Freq:  {gpu.clock_graphics:5.0f} / {gpu.clock_max:.0f} MHz",
+                    style=self.theme["primary"],
+                )
+            else:
+                freq_text.append(
+                    f"Freq:  {gpu.clock_graphics:5.0f} MHz",
+                    style=self.theme["primary"],
+                )
+            lines.append(freq_text)
+
+            power_text = Text()
+            power_text.append(
+                f"Power: {gpu.power_draw:5.1f}W / {gpu.power_limit:.0f}W",
                 style=self.theme["primary"],
             )
+            lines.append(power_text)
         else:
-            freq_text.append(
-                f"Freq:  {gpu.clock_graphics:5.0f} MHz",
-                style=self.theme["primary"],
-            )
-        lines.append(freq_text)
+            # Multi-GPU: one compact line per GPU
+            for g in gpus:
+                line = Text()
+                line.append(f"GPU {g.index}: ", style="dim")
+                line.append(
+                    f"{g.utilization_gpu:5.1f}% ", style=self.theme["primary"]
+                )
+                line.append(
+                    f"T:{g.temperature:.0f}°C ", style=self.theme["primary"]
+                )
+                line.append(
+                    f"P:{g.power_draw:.0f}/{g.power_limit:.0f}W",
+                    style=self.theme["primary"],
+                )
+                lines.append(line)
 
-        # Power
-        power_text = Text()
-        power_text.append(
-            f"Power: {gpu.power_draw:5.1f}W / {gpu.power_limit:.0f}W",
-            style=self.theme["primary"],
-        )
-        lines.append(power_text)
-
-        # Sparkline history
+        # Sparkline history (max util across GPUs)
         spark = self._make_sparkline(self.gpu_history, 100)
         spark_text = Text()
         spark_text.append("History: ", style="dim")
@@ -220,17 +249,15 @@ class RichUI:
 
         content = Group(*lines)
 
-        # Check threshold
-        is_alert = gpu.utilization_gpu > self.config.gpu_threshold
+        # Threshold (use max util)
+        is_alert = max_util > self.config.gpu_threshold
         border_style = "bold red" if is_alert else self.theme["primary"]
         title_style = "bold red" if is_alert else "bold"
         alert_tag = " [ALERT]" if is_alert else ""
 
         return Panel(
             content,
-            title=f"[{title_style}]GPU ({gpu.name}){alert_tag}[/{title_style}]"
-            if gpu.name
-            else f"[{title_style}]GPU (Blackwell){alert_tag}[/{title_style}]",
+            title=f"[{title_style}]GPU ({title_label}){alert_tag}[/{title_style}]",
             border_style=border_style,
             padding=(0, 1),
         )

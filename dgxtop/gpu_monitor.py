@@ -3,7 +3,7 @@
 
 import subprocess
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 
 @dataclass
@@ -31,7 +31,7 @@ class GPUMonitor:
     )
 
     def __init__(self):
-        self.last_stats: Optional[GPUStats] = None
+        self.last_stats: List[GPUStats] = []
         self._available = self._check_nvidia_smi()
 
     def _check_nvidia_smi(self) -> bool:
@@ -48,10 +48,10 @@ class GPUMonitor:
     def is_available(self) -> bool:
         return self._available
 
-    def get_stats(self) -> Optional[GPUStats]:
-        """Query GPU statistics via nvidia-smi"""
+    def get_stats(self) -> List[GPUStats]:
+        """Query GPU statistics via nvidia-smi (one entry per GPU)"""
         if not self._available:
-            return None
+            return []
 
         try:
             cmd = [
@@ -63,10 +63,6 @@ class GPUMonitor:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=2)
 
             if result.returncode != 0:
-                return self.last_stats
-
-            values = [v.strip() for v in result.stdout.strip().split(",")]
-            if len(values) < 6:
                 return self.last_stats
 
             def safe_float(v, default=0.0):
@@ -81,19 +77,35 @@ class GPUMonitor:
                 except (ValueError, TypeError):
                     return default
 
-            stats = GPUStats(
-                index=safe_int(values[0]),
-                name=values[1].strip(),
-                utilization_gpu=safe_float(values[2]),
-                temperature=safe_float(values[3]),
-                power_draw=safe_float(values[4]),
-                power_limit=safe_float(values[5], default=100.0),  # Default power limit
-                fan_speed=safe_float(values[6]) if len(values) > 6 else None,
-                clock_graphics=safe_float(values[7]) if len(values) > 7 else 0.0,
-                clock_max=safe_float(values[8]) if len(values) > 8 else 0.0,
-            )
+            stats_list: List[GPUStats] = []
+            for line in result.stdout.strip().splitlines():
+                if not line.strip():
+                    continue
+                values = [v.strip() for v in line.split(",")]
+                if len(values) < 6:
+                    continue
 
-            self.last_stats = stats
+                stats_list.append(GPUStats(
+                    index=safe_int(values[0]),
+                    name=values[1].strip(),
+                    utilization_gpu=safe_float(values[2]),
+                    temperature=safe_float(values[3]),
+                    power_draw=safe_float(values[4]),
+                    power_limit=safe_float(values[5], default=100.0),
+                    fan_speed=safe_float(values[6]) if len(values) > 6 else None,
+                    clock_graphics=safe_float(values[7]) if len(values) > 7 else 0.0,
+                    clock_max=safe_float(values[8]) if len(values) > 8 else 0.0,
+                ))
+
+            if stats_list:
+                self.last_stats = stats_list
+            return self.last_stats
+
+        except Exception as e:
+            # Log error for debugging but don't crash
+            import sys
+            print(f"GPU monitor error: {e}", file=sys.stderr)
+            return self.last_stats
             return stats
 
         except Exception as e:
